@@ -9,11 +9,13 @@ import "@openzeppelin/contracts/utils/Strings.sol";
 import "hardhat/console.sol";
 
 contract MyEpicGame is ERC721 {
+  
   struct CharacterAttributes {
     uint characterIndex;
     string name;
     string imageURI;
     uint hp;
+    
     uint maxHp;
     uint attackDamage;
   }
@@ -24,6 +26,7 @@ contract MyEpicGame is ERC721 {
   CharacterAttributes[] defaultCharacters;
 
   mapping(uint256 => CharacterAttributes) public nftHolderAttributes;
+  uint randNonce = 0;
 
   struct BigBoss {
     string name;
@@ -75,6 +78,12 @@ contract MyEpicGame is ERC721 {
 
     _tokenIds.increment();
   }
+  function randomInt(uint _modulus) internal returns(uint) {
+   randNonce++;                                                     // increase nonce
+   return uint(keccak256(abi.encodePacked(block.timestamp,         //  now timestamp
+                                          msg.sender,               // your address
+                                          randNonce))) % _modulus;  // modulo using the _modulus argument
+ }
 
   function mintCharacterNFT(uint _characterIndex) external {
     uint256 newItemId = _tokenIds.current();
@@ -128,35 +137,43 @@ contract MyEpicGame is ERC721 {
 }
 
 function attackBoss() public {
-  // Get the state of the player's NFT.
+ 
   uint256 nftTokenIdOfPlayer = nftHolders[msg.sender];
   CharacterAttributes storage player = nftHolderAttributes[nftTokenIdOfPlayer];
   console.log("\nPlayer w/ character %s about to attack. Has %s HP and %s AD", player.name, player.hp, player.attackDamage);
   console.log("Boss %s has %s HP and %s AD", bigBoss.name, bigBoss.hp, bigBoss.attackDamage);
 
   require(player.hp>0,
-  "Error: Your character must have hp to attack the boss"
-  );
+  "Error: Your character must have hp to attack the boss");
 
   require(bigBoss.hp>0,
   "Error:Boss must have hp to attack character");
 
-  if(bigBoss.hp< player.attackDamage){
-    bigBoss.hp=0;
-  }else{
-    bigBoss.hp=bigBoss.hp-player.attackDamage;
-  }
+ console.log("%s swings at %s...", player.name, bigBoss.name);        
+        if (bigBoss.hp < player.attackDamage) {
+            bigBoss.hp = 0;
+            console.log("The boss is dead!");  
+        } else {
+            if (randomInt(10) > 3) {                                 
+                bigBoss.hp = bigBoss.hp - player.attackDamage;
+                console.log("%s attacked boss. New boss hp: %s", player.name, bigBoss.hp);
+            } else {
+                console.log("%s missed!\n", player.name);
+            }
+        }
 
-  if(player.hp<bigBoss.attackDamage){
-    player.hp=0;  }
-    else{
-      player.hp=player.hp=bigBoss.attackDamage;
-
-
-    }
-
-  console.log("Player attacked boss. New boss hp: %s", bigBoss.hp);
-  console.log("Boss attacked player. New player hp: %s\n", player.hp);
+ console.log("%s swings at %s...",  bigBoss.name,player.name);        
+        if (player.hp<bigBoss.attackDamage) {
+            player.hp=0;
+            console.log("Your player is dead!");
+        } else {
+            if (randomInt(10) > 3) {                                 
+                player.hp=player.hp-bigBoss.attackDamage;
+                console.log("%s attacked player. New player hp: %s", bigBoss.name, player.hp);
+            } else {
+                console.log("%s missed!\n", bigBoss.name);
+            }
+        }
 }
 
 }
