@@ -78,12 +78,19 @@ contract MyEpicGame is ERC721 {
 
     _tokenIds.increment();
   }
-  function randomInt(uint _modulus) internal returns(uint) {
-   randNonce++;                                                     // increase nonce
-   return uint(keccak256(abi.encodePacked(block.timestamp,         //  now timestamp
-                                          msg.sender,               // your address
-                                          randNonce))) % _modulus;  // modulo using the _modulus argument
- }
+function randomInt(uint256 _modulus) internal view returns (uint256) {
+    uint256 randomHash = uint256(
+        keccak256(
+            abi.encodePacked(
+                block.prevrandao,
+                block.timestamp,
+                block.number,
+                msg.sender
+            )
+        )
+    );
+    return randomHash % _modulus;
+}
 
   function mintCharacterNFT(uint _characterIndex) external {
     uint256 newItemId = _tokenIds.current();
@@ -136,6 +143,21 @@ contract MyEpicGame is ERC721 {
   return output;
 }
 
+function checkIfUserHasNFT() public view returns (CharacterAttributes memory){
+  uint256 userNftTokenId=nftHolders[msg.sender];
+  if (userNftTokenId>0){
+    return nftHolderAttributes[userNftTokenId];
+  }
+  else{
+    CharacterAttributes memory emptyStruct;
+    return emptyStruct;
+  }
+
+}
+function getAllDefaultCharacters() public view returns (CharacterAttributes[] memory) {
+  return defaultCharacters;
+}
+
 function attackBoss() public {
  
   uint256 nftTokenIdOfPlayer = nftHolders[msg.sender];
@@ -154,7 +176,7 @@ function attackBoss() public {
             bigBoss.hp = 0;
             console.log("The boss is dead!");  
         } else {
-            if (randomInt(10) > 3) {                                 
+            if (randomInt(10) > 5) {                                 
                 bigBoss.hp = bigBoss.hp - player.attackDamage;
                 console.log("%s attacked boss. New boss hp: %s", player.name, bigBoss.hp);
             } else {
@@ -167,7 +189,7 @@ function attackBoss() public {
             player.hp=0;
             console.log("Your player is dead!");
         } else {
-            if (randomInt(10) > 3) {                                 
+            if (randomInt(10) > 5) {                                 
                 player.hp=player.hp-bigBoss.attackDamage;
                 console.log("%s attacked player. New player hp: %s", bigBoss.name, player.hp);
             } else {
