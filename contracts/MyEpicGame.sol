@@ -39,6 +39,8 @@ contract MyEpicGame is ERC721 {
   BigBoss public bigBoss;
 
   mapping(address => uint256) public nftHolders;
+  event CharacterNFTMinted(address sender, uint256 tokenId, uint256 characterIndex);
+event AttackComplete(address sender, uint newBossHp, uint newPlayerHp);
 
   constructor(
     string[] memory characterNames,
@@ -110,6 +112,7 @@ function randomInt(uint256 _modulus) internal view returns (uint256) {
     nftHolders[msg.sender] = newItemId;
 
     _tokenIds.increment();
+    emit CharacterNFTMinted(msg.sender, newItemId, _characterIndex);
   }
 
   // Users would be able to hit this function and get their NFT based on the
@@ -157,6 +160,10 @@ function checkIfUserHasNFT() public view returns (CharacterAttributes memory){
 function getAllDefaultCharacters() public view returns (CharacterAttributes[] memory) {
   return defaultCharacters;
 }
+function getBigBoss() public view returns (BigBoss memory) {
+  return bigBoss;
+}
+
 
 function attackBoss() public {
  
@@ -196,6 +203,8 @@ function attackBoss() public {
                 console.log("%s missed!\n", bigBoss.name);
             }
         }
+
+        emit AttackComplete(msg.sender, bigBoss.hp, player.hp);
 }
 
 }
